@@ -1,0 +1,18 @@
+[configfile]
+thread_num="10"
+run_array=[]
+run_hostname="haozi"
+cmdline="save tmp.txt"
+sys_payload=[]
+set_array=[]
+out_payload=""
+args=['save', 'tmp.txt']
+__file__="E:\project\ctf-box\main.py"
+cmd_array=['run', 'get', 'set', 'add', 'del', 'save', 'shell', 'exit']
+__name__="__main__"
+run_user="haozi\administrator"
+target=[]
+run_symbol="#"
+run_count="10"
+sleep_time="120"
+run_path="E:\project\ctf-box"
