@@ -6,11 +6,15 @@ import time
 from log import *
 import json
 from config import *
+import hashlib
 
 run_path = os.getcwd()
 run_hostname = os.popen('hostname').read()[:-1]
 run_user = os.popen('whoami').read()[:-1]
 run_symbol = '#' if 'root' in run_user or 'admin' in run_user else '$'
+platform = 'linux' if 'root' in run_user else "windows"
+
+sys.path.append('./con_payload')
 
 
 def split_cmdline(cmdline):
@@ -108,10 +112,81 @@ class cmd():
                 log('info','删除成功！')
                 
         def run_func(self,args):
-                pass
+                if len(args)==1:
+                        self.set_func(['sys_payload',args[0]])
+                        
+                def check_arg_generate_config():
+                        config_result = '#!/usr/bin/env python\r\n'+'# -*- coding: utf-8 -*-\r\n'
+                        check_array = ['target','thread_num','sys_payload','con_payload','run_count','sleep_time']
+                        for var in check_array:
+                                error = 0
+                                if not globals().has_key(var):
+                                        log('warning','缺少设置：'+var)
+                                        error = 1
+                                else:
+                                        config_result += var+' = '+str(globals()[var])+'\r\n'
+                        if error:
+                                return
+                        open('./tmp/config.py','w').write(config_result)
+
+                def generate_payload_module():
+                        result = '#!/usr/bin/env python\r\n'+'# -*- coding: utf-8 -*-\r\n'
+                        for var in con_payload:
+                                result += 'import '+con_payload[var]+'\r\n'
+                        open('./tmp/payload_module.py','w').write(result)
+                                
+                def generate_dir():
+                        dir_name = hashlib.md5(str(time.time())).hexdigest()
+                        
+                        linux_cmd = ['cd ./package',
+                                     'mkdir '+dir_name,
+                                     'cp ../sys_payload.py .',
+                                     'cp ../run.py .',
+                                     'cp ../tmp/config.py .',
+                                     'cp ../tmp/payload_module.py .',
+                                     ]
+                        windows_cmd = [r'mkdir package\\'+dir_name,
+                                     r'copy sys_payload.py package\\'+dir_name,
+                                     r'copy run.py package\\'+dir_name,
+                                     r'copy tmp\config.py package\\'+dir_name,
+                                     r'copy tmp\payload_module.py package\\'+dir_name,
+                                     ]
+                        if platform=='linux':
+                                cmd = linux_cmd
+                        else:
+                                cmd = windows_cmd
+
+                        print cmd 
+                        try:
+                                print os.popen('|'.join(cmd)).read()
+                                log('info','生成的运行文件在目录 '+os.getcwd()+'\package\\'+dir_name)
+                        except Exception,e:
+                                log('warning',e)
+
+                check_arg_generate_config()
+                generate_payload_module()
+                generate_dir()
+                
+                        
+
+                                     
+
+                                
+                               
+                
 
         def shell_func(self,args):
-                print os.popen(' '.join(args)).read()
+                for ip in target:
+                        if globals()['con_payload'].has_key(ip):
+                                module = globals()['con_payload'][ip]
+                                try:
+                                        print __import__(module).run(ip,'',' '.join(args))
+                                except Exception,e:
+                                        log('warning',e)
+                        else:
+                                log('warning','请设置 '+ip+' 的con_payload配置！')
+                                
+                
 
         def exit_func(self,args):
                 sys.exit('good bye~')

