@@ -32,7 +32,8 @@ class RunPayload(threading.Thread):
                         log('warning','没有对应的con_payload！')
                         continue
                     try:
-                        self.result = __import__(con_payload[self.target]).run(self.target,self.payload,'自定义参数')
+                        func = getattr(con_payload[self.target],'run')       
+                        self.result = func(self.target,self.payload,'自定义参数')
                     except Exception,e:
                         log('warning',e)
                         self.result = 'error'

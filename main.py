@@ -132,12 +132,14 @@ class cmd():
                 def check_arg_generate_config():
                         config_result = '#!/usr/bin/env python\r\n'+'# -*- coding: utf-8 -*-\r\n'
                         check_array = ['target','thread_num','sys_payload','con_payload','run_count','sleep_time',
-                                       'write_log_allow']
+                                       'write_log_allow','platform']
                         for var in check_array:
                                 error = 0
                                 if not globals().has_key(var):
                                         log('warning','缺少设置：'+var)
                                         error = 1
+                                elif 'str' in str(type(globals()[var])):
+                                        config_result += var+' = "'+str(globals()[var])+'"\r\n'
                                 else:
                                         config_result += var+' = '+str(globals()[var])+'\r\n'
                         if error:

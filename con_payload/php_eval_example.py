@@ -13,7 +13,6 @@ import urllib
 
 # example of payload
 def run(target,payload,extend):
-		
 	def http(method,host,port,url,data):
 		#print host
 		con = httplib.HTTPConnection(host,port,timeout=20)

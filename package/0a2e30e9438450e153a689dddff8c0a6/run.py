@@ -28,6 +28,9 @@ class RunPayload(threading.Thread):
                             
                     else:
                             [self.target,self.payload]=self.queue.get().split('||')
+                    if not con_payload.has_key(self.target):
+                        log('warning','没有对应的con_payload！')
+                        continue
                     try:
                         func = getattr(con_payload[self.target],'run')       
                         self.result = func(self.target,self.payload,'自定义参数')

@@ -7,4 +7,3 @@ con_payload = {'127.0.0.1': 'php_eval_example'}
 run_count = 10
 sleep_time = 120
 write_log_allow = False
-platform = "windows"
