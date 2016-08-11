@@ -7,5 +7,7 @@ import os
 
 # example of payload
 def run(target,payload,extend):
+	target = target
+	payload = sys_payload_array[payload]
 	cmd = extend
 	return os.popen(cmd).read()

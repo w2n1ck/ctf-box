@@ -8,11 +8,6 @@ import json
 from config import *
 import hashlib
 
-run_path = os.getcwd()
-run_hostname = os.popen('hostname').read()[:-1]
-run_user = os.popen('whoami').read()[:-1]
-run_symbol = '#' if 'root' in run_user or 'admin' in run_user else '$'
-platform = 'linux' if 'root' in run_user else "windows"
 
 sys.path.append('./con_payload')
 
@@ -42,16 +37,24 @@ class cmd():
       
                         
         def set_func(self,args):
-                if not globals().has_key(args[0]):
-                        log('warning','没有这个变量！')
-                        return
                 if len(args)<2:
                         log('warning','缺少参数，请检查！')
                         return
-                elif not 'list' in str(type(globals()[args[0]])):
-                        globals()[args[0]] = args[1]
-                else:
+                if not globals().has_key(args[0]):
+                        log('warning','没有这个变量！')
+                        return
+                elif 'list' in str(type(globals()[args[0]])):
                         globals()[args[0]] = args[1].split(',')
+                elif 'dict' in str(type(globals()[args[0]])):
+                        if ',' not in args[1]:
+                                log('warning','目标参数是数组，请使用,分隔之')
+                                return
+                        key = args[1].split(',')[0]
+                        value = args[1].split(',')[1]
+                        globals()[args[0]][key] = value
+                        
+                else:
+                        globals()[args[0]] = args[1]
                 log('info','设置成功！')
 
                 if args[0]=='configfile':
@@ -64,11 +67,8 @@ class cmd():
                         except Exception,e:
                                 print e
                                 log('warning','无效文件！')
-                        
-                        
-                                
-                        
-                
+                                                        
+                              
         def save_func(self,args):
                 result = '[configfile]\r\n'
                 json_result = {}
@@ -94,21 +94,35 @@ class cmd():
 
                 
         def add_func(self,args):
-                if 'list' not in str(type(globals()[args[0]])):
-                        log('warning','添加对象只能是数组！')
-                        return
                 if len(args)<2:
                         log('warning','缺少参数，请检查！')
-                globals()[args[0]].append(args[1])
+                        return
+                if 'list'  in str(type(globals()[args[0]])):
+                        globals()[args[0]].append(args[1])
+                elif 'dict' in str(type(globals()[args[0]])):
+                        if ',' not in args[1]:
+                                log('warning','目标参数是数组，请使用,分隔之')
+                                return
+                        key,value = args[1].split(',')
+                        globals()[args[0]][key] = value
+                else:
+                        log('warning','添加对象只能是数组！')
+                        return
+                
                 log('info','添加成功！')
                           
         def del_func(self,args):
-                if 'list' not in str(type(globals()[args[0]])):
-                        log('warning','添加对象只能是数组！')
-                        return
                 if len(args)<2:
                         log('warning','缺少参数，请检查！')
-                globals()[args[0]] = [ x for x in globals()[args[0]] if x!=args[1] ]
+                        return
+                if 'list'  in str(type(globals()[args[0]])):
+                        globals()[args[0]] = [ x for x in globals()[args[0]] if x!=args[1] ]      
+                elif 'dict'  in str(type(globals()[args[0]])):
+                        del globals()[args[0]][args[1]]
+                else:
+                        log('warning','删除对象只能是数组或字典！')
+                        return
+                
                 log('info','删除成功！')
                 
         def run_func(self,args):
@@ -117,7 +131,8 @@ class cmd():
                         
                 def check_arg_generate_config():
                         config_result = '#!/usr/bin/env python\r\n'+'# -*- coding: utf-8 -*-\r\n'
-                        check_array = ['target','thread_num','sys_payload','con_payload','run_count','sleep_time']
+                        check_array = ['target','thread_num','sys_payload','con_payload','run_count','sleep_time',
+                                       'write_log_allow']
                         for var in check_array:
                                 error = 0
                                 if not globals().has_key(var):
@@ -144,12 +159,14 @@ class cmd():
                                      'cp ../run.py .',
                                      'cp ../tmp/config.py .',
                                      'cp ../tmp/payload_module.py .',
+                                     'cp ../log.py .',
                                      ]
                         windows_cmd = [r'mkdir package\\'+dir_name,
                                      r'copy sys_payload.py package\\'+dir_name,
                                      r'copy run.py package\\'+dir_name,
                                      r'copy tmp\config.py package\\'+dir_name,
                                      r'copy tmp\payload_module.py package\\'+dir_name,
+                                     r'copy log.py package\\'+dir_name
                                      ]
                         if platform=='linux':
                                 cmd = linux_cmd
@@ -166,21 +183,15 @@ class cmd():
                 check_arg_generate_config()
                 generate_payload_module()
                 generate_dir()
-                
-                        
-
-                                     
-
-                                
+                                 
                                
-                
-
         def shell_func(self,args):
                 for ip in target:
                         if globals()['con_payload'].has_key(ip):
                                 module = globals()['con_payload'][ip]
+                                #print __import__(module).run(ip,'',' '.join(args))
                                 try:
-                                        print __import__(module).run(ip,'',' '.join(args))
+                                        print ip+' 的返回:\r\n'+__import__(module).run(ip,'',' '.join(args))
                                 except Exception,e:
                                         log('warning',e)
                         else:
